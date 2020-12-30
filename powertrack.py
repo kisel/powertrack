@@ -15,9 +15,7 @@ EVT_POWEROFF = 2
 
 LAST_ON = 'last_on'
 TIMESTAMPS_TABLE = 'timestamps'
-# TODO: move to db config
-shutdown_tolerance = 180
-update_interval = 60
+DEFAULT_DB_PATH = '/var/lib/powertrack/powertrack.sqlite'
 
 def dbinit(db):
     # declare event_types ENUM
@@ -98,14 +96,42 @@ def print_events(db):
     for ts, evtname in res:
         print("{:20} {}".format(ts, evtname))
 
+def sh(shellcmd):
+    import os
+    print(shellcmd)
+    os.system(shellcmd)
+
+def install():
+    sh('cp -v powertrack.py /usr/local/bin/powertrack')
+    sh('chmod 755 /usr/local/bin/powertrack')
+    sh('cp -v powertrack.service /etc/systemd/system/powertrack.service')
+    sh('chmod 755 /etc/systemd/system/powertrack.service')
+    sh('systemctl enable --now powertrack.service')
+    sh('systemctl status powertrack.service')
+
+def uninstall():
+    sh('systemctl disable --now powertrack.service')
+    sh('rm /usr/local/bin/powertrack')
+    sh('rm /etc/systemd/system/powertrack.service')
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--db', default='powertrack.sqlite', help='database path(defaults to powertrack.sqlite)')
+    parser.add_argument('-d', '--db', default=DEFAULT_DB_PATH, help='database path(defaults to %s)' % DEFAULT_DB_PATH)
     parser.add_argument('--interval', default=60, type=int, help='update last online interval')
     parser.add_argument('--tolerance', default=0, type=int, help='ignore offline shorter than N sec(default=0)')
     parser.add_argument('--watch', action='store_true', help='watch for shutdown')
     parser.add_argument('--list', action='store_true', help='print journal')
+    parser.add_argument('--install', action='store_true', help='install system service(run with sudo)')
+    parser.add_argument('--uninstall', action='store_true', help='uninstall system service(run with sudo)')
     args = parser.parse_args()
+
+    if args.install:
+        install()
+        return
+    if args.uninstall:
+        uninstall()
+        return
+
     db = sqlite3.connect(args.db)
     if args.list:
         print_events(db)

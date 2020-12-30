@@ -1,0 +1,13 @@
+[Unit]
+Description=Power Tracker
+After=sysinit.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStartPre=/bin/mkdir -p /var/lib/powertrack
+ExecStart=/usr/bin/python3 /usr/local/bin/powertrack --watch --db /var/lib/powertrack/powertrack.sqlite
+
+[Install]
+WantedBy=basic.target
+
