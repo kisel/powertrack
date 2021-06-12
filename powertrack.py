@@ -67,6 +67,7 @@ def startup(db, opt: Options):
     if last_on != 0 and time_now - last_on > opt.tolerance:
         print("Detected offline time")
         print("Shutdown time: %s" % time.ctime(last_on))
+        # consider using /proc/uptime instead to get precise system start time
         print("Power on time: %s" % time.ctime(time_now))
         print("Offline time(sec): %d" % (time_now - last_on))
         db.execute("INSERT INTO journal(event_type_id, timestamp) VALUES (?, ?)", [EVT_POWEROFF, last_on])
@@ -120,6 +121,7 @@ def main():
     parser.add_argument('--interval', default=60, type=int, help='update last online interval')
     parser.add_argument('--tolerance', default=0, type=int, help='ignore offline shorter than N sec(default=0)')
     parser.add_argument('--watch', action='store_true', help='watch for shutdown')
+    parser.add_argument('--dbinit', action='store_true', help='allows db rw access for --list')
     parser.add_argument('--list', action='store_true', help='print journal')
     parser.add_argument('--install', action='store_true', help='install system service(run with sudo)')
     parser.add_argument('--uninstall', action='store_true', help='uninstall system service(run with sudo)')
@@ -134,6 +136,8 @@ def main():
 
     db = sqlite3.connect(args.db)
     if args.list:
+        if args.dbinit:
+            dbinit(db)
         print_events(db)
     elif args.watch:
         watch(db, Options(interval=args.interval, tolerance=args.tolerance))
