@@ -26,8 +26,8 @@ def dbinit(db):
         ) ''')
 
     db.executemany('''INSERT OR IGNORE INTO event_types (event_type_id, name, event_group) VALUES (?,?,?)''', [
-        (EVT_POWERON, "power_off", "power"),
-        (EVT_POWEROFF, "power_on", "power"),
+        (EVT_POWERON, "power_on", "power"),
+        (EVT_POWEROFF, "power_off", "power"),
         ])
 
     # key-value timestamps
